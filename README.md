@@ -1,12 +1,6 @@
 # EigenBirkin
 
-This repo now separates the workflow into scripts for eigenbag generation, dataset mixing, and KNN classification/testing.
-
-1. **`main.py`** (also runnable as `eigenbag_generator.py`) for eigenbag generation/visualization only.
-2. **`data_mixer.py`** to mix `Data/Birkin`, `Data/birkins`, and `Data/other` into one labeled dataset.
-3. **`knn_classifier.py`** for quick train/evaluate KNN classification using PCA eigenbag features from one dataset.
-4. **`create_test_dataset.py`** to create explicit train/test dataset files.
-5. **`test_knn_accuracy.py`** to test KNN accuracy using PCA eigenbags learned from train split and evaluated on test split.
+Simple, single-command pipeline for **Birkin vs not-Birkin** classification using **PCA eigenbags + KNN**.
 
 ## Install
 
@@ -14,64 +8,30 @@ This repo now separates the workflow into scripts for eigenbag generation, datas
 pip install -r requirements.txt
 ```
 
-## 1) Eigenbag generator (original flow)
+## Run (all-in-one)
 
 ```bash
-python main.py --image-dir Data/Birkin --size 128 --components 12
-# or
-python eigenbag_generator.py --image-dir Data/Birkin --size 128 --components 12
+python run_pipeline.py
 ```
 
-Outputs:
+This single script does everything:
+- mixes data from `Data/Birkin` + `Data/birkins` (Birkin) and `Data/other` (not-Birkin)
+- splits into train/test
+- learns PCA eigenbag features on train set
+- trains KNN classifier
+- evaluates accuracy on test set
+- writes report to `outputs/pipeline_report.txt`
 
-- `outputs/mean_birkin.png`
-- `outputs/eigenbirkins.png`
-- `outputs/reconstruction.png`
-
-## 2) Mix dataset (both Birkin folders + other)
+## Optional parameters
 
 ```bash
-python data_mixer.py \
+python run_pipeline.py \
   --birkin-dirs Data/Birkin Data/birkins \
   --other-dir Data/other \
-  --size 128 \
-  --output outputs/mixed_dataset.npz
-```
-
-## 3) (Optional) One-command train/evaluate KNN on mixed dataset
-
-```bash
-python knn_classifier.py \
-  --dataset outputs/mixed_dataset.npz \
-  --components 48 \
-  --k 5
-```
-
-Output:
-
-- `outputs/classification_report.txt`
-
-## 4) Create explicit train/test datasets
-
-```bash
-python create_test_dataset.py \
-  --dataset outputs/mixed_dataset.npz \
+  --size 64 \
+  --components 24 \
+  --k 3 \
   --test-size 0.2 \
-  --train-output outputs/train_dataset.npz \
-  --test-output outputs/test_dataset.npz
+  --seed 42 \
+  --report-path outputs/pipeline_report.txt
 ```
-
-## 5) Test KNN accuracy using PCA eigenbags (train -> test)
-
-```bash
-python test_knn_accuracy.py \
-  --train-dataset outputs/train_dataset.npz \
-  --test-dataset outputs/test_dataset.npz \
-  --components 48 \
-  --k 5 \
-  --report-path outputs/knn_test_accuracy_report.txt
-```
-
-Output:
-
-- `outputs/knn_test_accuracy_report.txt`
